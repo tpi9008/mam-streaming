@@ -1,32 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useMsal } from "@azure/msal-react";
 import { fetchAudioFiles } from '@/services/OneDriveService.js';
 import EpisodePlayer from '@/components/EpisodePlayer/EpisodePlayer.jsx';
 
 const EpisodeList = () => {
-    const { instance, accounts } = useMsal();
     const [episodes, setEpisodes] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const loadEpisodes = async () => {
-            if (!accounts[0]) return;
             setLoading(true);
             try {
-                const files = await fetchAudioFiles(instance, accounts[0]);
+                // You'll need to modify OneDriveService to remove MSAL dependencies
+                const files = await fetchAudioFiles();
                 setEpisodes(files);
+                setError(null);
             } catch (error) {
                 console.error("Error loading episodes:", error);
+                setError("Failed to load episodes");
             } finally {
                 setLoading(false);
             }
         };
 
         loadEpisodes();
-    }, [instance, accounts]);
+    }, []);
 
     if (loading) return <div className="p-4">Loading episodes...</div>;
-    if (!accounts[0]) return <div className="p-4">Please sign in</div>;
+    if (error) return <div className="p-4 text-red-500">{error}</div>;
 
     return (
         <div>
@@ -36,7 +37,7 @@ const EpisodeList = () => {
                     {episodes.map((episode) => (
                         <EpisodePlayer
                             key={episode.id}
-                            episode={episode} // Pass the full enriched episode object
+                            episode={episode}
                         />
                     ))}
                 </div>
