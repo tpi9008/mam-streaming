@@ -3,7 +3,6 @@ import { getAudioStreamUrl } from '@/services/OneDriveService.js';
 import { Play, Pause, FastForward, Rewind, Volume2, VolumeX } from 'lucide-react';
 
 const EpisodePlayer = ({ episode }) => {
-    const [audioUrl, setAudioUrl] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -11,21 +10,20 @@ const EpisodePlayer = ({ episode }) => {
     const audioRef = useRef(null);
 
     useEffect(() => {
-        const fetchAudioUrl = async () => {
-            try {
-                const url = await getAudioStreamUrl(episode.id);
-                setAudioUrl(url);
-            } catch (error) {
-                console.error('Failed to get audio stream URL:', error);
-            }
-        };
-        fetchAudioUrl();
-    }, [episode.id]);
+        if (audioRef.current) {
+            audioRef.current.src = episode.audio?.streamUrl || null;
+        }
+    }, [episode.audio?.streamUrl]);
 
     const handlePlay = () => {
-        if (!audioUrl) return;
+        if (!episode.audio?.streamUrl) {
+            console.error('No stream URL available');
+            return;
+        }
         if (!isPlaying) {
-            audioRef.current.play();
+            audioRef.current.play().catch(error => {
+                console.error('Error playing audio:', error);
+            });
             setIsPlaying(true);
         } else {
             audioRef.current.pause();
@@ -68,6 +66,9 @@ const EpisodePlayer = ({ episode }) => {
             audioRef.current.ondurationchange = () => {
                 setDuration(audioRef.current.duration);
             };
+            audioRef.current.onended = () => {
+                setIsPlaying(false);
+            };
         }
     }, [audioRef]);
 
@@ -92,13 +93,15 @@ const EpisodePlayer = ({ episode }) => {
                                 onClick={handleFastBackward}
                                 className="text-gray-600 hover:text-gray-800"
                                 title="Rewind 10 seconds"
+                                disabled={!episode.audio?.streamUrl}
                             >
                                 <Rewind size={20} />
                             </button>
 
                             <button
                                 onClick={handlePlay}
-                                className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600"
+                                className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 disabled:bg-gray-400"
+                                disabled={!episode.audio?.streamUrl}
                             >
                                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                             </button>
@@ -107,6 +110,7 @@ const EpisodePlayer = ({ episode }) => {
                                 onClick={handleFastForward}
                                 className="text-gray-600 hover:text-gray-800"
                                 title="Forward 30 seconds"
+                                disabled={!episode.audio?.streamUrl}
                             >
                                 <FastForward size={20} />
                             </button>
@@ -114,6 +118,7 @@ const EpisodePlayer = ({ episode }) => {
                             <button
                                 onClick={toggleMute}
                                 className="text-gray-600 hover:text-gray-800"
+                                disabled={!episode.audio?.streamUrl}
                             >
                                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                             </button>
@@ -130,11 +135,12 @@ const EpisodePlayer = ({ episode }) => {
                             value={currentTime}
                             onChange={handleSeek}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            disabled={!episode.audio?.streamUrl}
                         />
                     </div>
                 </div>
             </div>
-            <audio ref={audioRef} src={audioUrl} />
+            <audio ref={audioRef} />
         </div>
     );
 };
