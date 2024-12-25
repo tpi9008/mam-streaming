@@ -6,24 +6,21 @@ const EpisodePlayer = ({ episode }) => {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(1);
     const audioRef = useRef(null);
+    const progressRef = useRef(null);
 
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.src = episode.audio?.streamUrl || null;
+            audioRef.current.volume = volume;
         }
-    }, [episode.audio?.streamUrl]);
+    }, [episode.audio?.streamUrl, volume]);
 
     const handlePlay = () => {
-        if (!episode.audio?.streamUrl) {
-            console.error('No stream URL available for:', episode);
-            return;
-        }
-        console.log('Playing audio from URL:', episode.audio.streamUrl);
+        if (!episode.audio?.streamUrl) return;
         if (!isPlaying) {
-            audioRef.current.play().catch(error => {
-                console.error('Error playing audio:', error);
-            });
+            audioRef.current.play().catch(console.error);
             setIsPlaying(true);
         } else {
             audioRef.current.pause();
@@ -32,9 +29,11 @@ const EpisodePlayer = ({ episode }) => {
     };
 
     const handleSeek = (e) => {
-        const value = parseFloat(e.target.value);
-        audioRef.current.currentTime = value;
-        setCurrentTime(value);
+        const rect = progressRef.current.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        const newTime = pos * duration;
+        audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
     };
 
     const handleFastForward = () => {
@@ -47,9 +46,21 @@ const EpisodePlayer = ({ episode }) => {
         setCurrentTime(audioRef.current.currentTime);
     };
 
+    const handleVolumeChange = (e) => {
+        const newVolume = parseFloat(e.target.value);
+        setVolume(newVolume);
+        audioRef.current.volume = newVolume;
+        setIsMuted(newVolume === 0);
+    };
+
     const toggleMute = () => {
-        audioRef.current.muted = !audioRef.current.muted;
-        setIsMuted(!isMuted);
+        if (isMuted) {
+            audioRef.current.volume = volume;
+            setIsMuted(false);
+        } else {
+            audioRef.current.volume = 0;
+            setIsMuted(true);
+        }
     };
 
     const formatTime = (time) => {
@@ -73,9 +84,9 @@ const EpisodePlayer = ({ episode }) => {
     }, [audioRef]);
 
     return (
-        <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 mb-8">
-            <div className="flex items-start space-x-6">
-                <div className="w-24 h-24 rounded-lg flex-shrink-0">
+        <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-start gap-6">
+                <div className="w-24 h-24 rounded-lg flex-shrink-0 mx-auto md:mx-0">
                     <img
                         src="/images/mam-logo.png"
                         alt="MAM"
@@ -84,8 +95,8 @@ const EpisodePlayer = ({ episode }) => {
                 </div>
 
                 <div className="flex-grow space-y-4">
-                    <div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-1 leading-tight">
+                    <div className="text-center md:text-left">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-1">
                             {episode.audio?.title || episode.name}
                         </h3>
                         <p className="text-sm text-gray-500">
@@ -94,57 +105,65 @@ const EpisodePlayer = ({ episode }) => {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center md:justify-start gap-4">
                             <button
                                 onClick={handleFastBackward}
-                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                                className="w-12 h-12 flex items-center justify-center rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
                                 title="Rewind 10 seconds"
-                                disabled={!episode.audio?.streamUrl}
                             >
-                                <Rewind size={20} />
+                                <Rewind size={24} />
                             </button>
 
                             <button
                                 onClick={handlePlay}
-                                className={`${isPlaying ? 'bg-blue-600' : 'bg-blue-500'
-                                    } text-white p-4 rounded-full hover:bg-blue-600 transition-colors duration-200 disabled:bg-gray-400 shadow-md hover:shadow-lg`}
-                                disabled={!episode.audio?.streamUrl}
+                                className={`w-16 h-16 flex items-center justify-center rounded-full text-white transition-all duration-200 shadow-lg hover:shadow-xl ${isPlaying ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                                    }`}
                             >
-                                {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                                {isPlaying ? <Pause size={32} /> : <Play size={32} />}
                             </button>
 
                             <button
                                 onClick={handleFastForward}
-                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                                className="w-12 h-12 flex items-center justify-center rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
                                 title="Forward 30 seconds"
-                                disabled={!episode.audio?.streamUrl}
                             >
-                                <FastForward size={20} />
+                                <FastForward size={24} />
                             </button>
+                        </div>
 
-                            <button
-                                onClick={toggleMute}
-                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-                                disabled={!episode.audio?.streamUrl}
+                        <div className="space-y-2">
+                            <div
+                                ref={progressRef}
+                                onClick={handleSeek}
+                                className="relative w-full h-2 bg-gray-200 rounded-full cursor-pointer overflow-hidden"
                             >
-                                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                            </button>
+                                <div
+                                    className="absolute left-0 top-0 h-full bg-blue-500 transition-all duration-150"
+                                    style={{ width: `${(currentTime / duration) * 100}%` }}
+                                />
+                            </div>
 
-                            <div className="text-sm font-medium text-gray-600 min-w-[100px]">
-                                {formatTime(currentTime)} / {formatTime(duration)}
+                            <div className="flex items-center justify-between text-sm font-medium text-gray-600">
+                                <span>{formatTime(currentTime)}</span>
+                                <span>{formatTime(duration)}</span>
                             </div>
                         </div>
 
-                        <div className="relative w-full h-2 group">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={toggleMute}
+                                className="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                            >
+                                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                            </button>
                             <input
                                 type="range"
                                 min="0"
-                                max={duration || 100}
-                                value={currentTime}
-                                onChange={handleSeek}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer 
-                                         hover:bg-gray-300 transition-colors duration-200"
-                                disabled={!episode.audio?.streamUrl}
+                                max="1"
+                                step="0.05"
+                                value={isMuted ? 0 : volume}
+                                onChange={handleVolumeChange}
+                                className="w-24 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer"
                             />
                         </div>
                     </div>
