@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getAudioStreamUrl } from '@/services/OneDriveService.js';
 import { Play, Pause, FastForward, Rewind, Volume2, VolumeX } from 'lucide-react';
 
 const EpisodePlayer = ({ episode }) => {
@@ -11,9 +10,7 @@ const EpisodePlayer = ({ episode }) => {
 
     useEffect(() => {
         if (audioRef.current) {
-            const streamUrl = episode.audio?.streamUrl || null;
-            console.log('Setting audio source:', streamUrl);
-            audioRef.current.src = streamUrl;
+            audioRef.current.src = episode.audio?.streamUrl || null;
         }
     }, [episode.audio?.streamUrl]);
 
@@ -76,29 +73,31 @@ const EpisodePlayer = ({ episode }) => {
     }, [audioRef]);
 
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <div className="flex items-start space-x-4">
+        <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 mb-8">
+            <div className="flex items-start space-x-6">
                 <div className="w-24 h-24 rounded-lg flex-shrink-0">
                     <img
                         src="/images/mam-logo.png"
                         alt="MAM"
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-lg shadow-md"
                     />
                 </div>
 
-                <div className="flex-grow">
-                    <h3 className="text-lg font-semibold mb-2">
-                        {episode.audio?.title || episode.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                        Filename: {episode.name}
-                    </p>
+                <div className="flex-grow space-y-4">
+                    <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-1 leading-tight">
+                            {episode.audio?.title || episode.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                            {episode.name}
+                        </p>
+                    </div>
 
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={handleFastBackward}
-                                className="text-gray-600 hover:text-gray-800"
+                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
                                 title="Rewind 10 seconds"
                                 disabled={!episode.audio?.streamUrl}
                             >
@@ -107,7 +106,8 @@ const EpisodePlayer = ({ episode }) => {
 
                             <button
                                 onClick={handlePlay}
-                                className="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 disabled:bg-gray-400"
+                                className={`${isPlaying ? 'bg-blue-600' : 'bg-blue-500'
+                                    } text-white p-4 rounded-full hover:bg-blue-600 transition-colors duration-200 disabled:bg-gray-400 shadow-md hover:shadow-lg`}
                                 disabled={!episode.audio?.streamUrl}
                             >
                                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
@@ -115,7 +115,7 @@ const EpisodePlayer = ({ episode }) => {
 
                             <button
                                 onClick={handleFastForward}
-                                className="text-gray-600 hover:text-gray-800"
+                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
                                 title="Forward 30 seconds"
                                 disabled={!episode.audio?.streamUrl}
                             >
@@ -124,26 +124,29 @@ const EpisodePlayer = ({ episode }) => {
 
                             <button
                                 onClick={toggleMute}
-                                className="text-gray-600 hover:text-gray-800"
+                                className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
                                 disabled={!episode.audio?.streamUrl}
                             >
                                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
                             </button>
 
-                            <div className="text-sm text-gray-600 min-w-[100px]">
+                            <div className="text-sm font-medium text-gray-600 min-w-[100px]">
                                 {formatTime(currentTime)} / {formatTime(duration)}
                             </div>
                         </div>
 
-                        <input
-                            type="range"
-                            min="0"
-                            max={duration || 100}
-                            value={currentTime}
-                            onChange={handleSeek}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            disabled={!episode.audio?.streamUrl}
-                        />
+                        <div className="relative w-full h-2 group">
+                            <input
+                                type="range"
+                                min="0"
+                                max={duration || 100}
+                                value={currentTime}
+                                onChange={handleSeek}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer 
+                                         hover:bg-gray-300 transition-colors duration-200"
+                                disabled={!episode.audio?.streamUrl}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
