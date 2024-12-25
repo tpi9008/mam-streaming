@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, FastForward, Rewind, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, FastForward, Rewind } from 'lucide-react';
 
 const EpisodePlayer = ({ episode }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [isMuted, setIsMuted] = useState(false);
-    const [volume, setVolume] = useState(1);
     const audioRef = useRef(null);
     const progressRef = useRef(null);
 
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.src = episode.audio?.streamUrl || null;
-            audioRef.current.volume = volume;
         }
-    }, [episode.audio?.streamUrl, volume]);
+    }, [episode.audio?.streamUrl]);
 
     const handlePlay = () => {
         if (!episode.audio?.streamUrl) return;
@@ -44,23 +41,6 @@ const EpisodePlayer = ({ episode }) => {
     const handleFastBackward = () => {
         audioRef.current.currentTime -= 10;
         setCurrentTime(audioRef.current.currentTime);
-    };
-
-    const handleVolumeChange = (e) => {
-        const newVolume = parseFloat(e.target.value);
-        setVolume(newVolume);
-        audioRef.current.volume = newVolume;
-        setIsMuted(newVolume === 0);
-    };
-
-    const toggleMute = () => {
-        if (isMuted) {
-            audioRef.current.volume = volume;
-            setIsMuted(false);
-        } else {
-            audioRef.current.volume = 0;
-            setIsMuted(true);
-        }
     };
 
     const formatTime = (time) => {
@@ -147,24 +127,6 @@ const EpisodePlayer = ({ episode }) => {
                                 <span>{formatTime(currentTime)}</span>
                                 <span>{formatTime(duration)}</span>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={toggleMute}
-                                className="w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
-                            >
-                                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                            </button>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.05"
-                                value={isMuted ? 0 : volume}
-                                onChange={handleVolumeChange}
-                                className="w-24 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer"
-                            />
                         </div>
                     </div>
                 </div>
