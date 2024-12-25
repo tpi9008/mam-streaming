@@ -11,7 +11,6 @@ const EpisodeList = () => {
         const loadEpisodes = async () => {
             setLoading(true);
             try {
-                // You'll need to modify OneDriveService to remove MSAL dependencies
                 const files = await fetchAudioFiles();
                 setEpisodes(files);
                 setError(null);
@@ -26,12 +25,12 @@ const EpisodeList = () => {
         loadEpisodes();
     }, []);
 
-    if (loading) return <div className="p-4">Loading episodes...</div>;
+    if (loading) return <div className="p-4 text-white">Loading episodes...</div>;
     if (error) return <div className="p-4 text-red-500">{error}</div>;
 
     return (
         <div>
-            <h2 className="text-2xl font-bold mb-4">Episodes</h2>
+            <h2 className="text-2xl font-bold mb-4 text-white">Episodes</h2>
             {episodes.length > 0 ? (
                 <div className="space-y-4">
                     {episodes.map((episode) => (
@@ -42,7 +41,7 @@ const EpisodeList = () => {
                     ))}
                 </div>
             ) : (
-                <p>No episodes found.</p>
+                <p className="text-white">No episodes found.</p>
             )}
         </div>
     );
