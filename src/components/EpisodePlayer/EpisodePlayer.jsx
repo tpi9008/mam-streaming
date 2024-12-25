@@ -11,15 +11,18 @@ const EpisodePlayer = ({ episode }) => {
 
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.src = episode.audio?.streamUrl || null;
+            const streamUrl = episode.audio?.streamUrl || null;
+            console.log('Setting audio source:', streamUrl);
+            audioRef.current.src = streamUrl;
         }
     }, [episode.audio?.streamUrl]);
 
     const handlePlay = () => {
         if (!episode.audio?.streamUrl) {
-            console.error('No stream URL available');
+            console.error('No stream URL available for:', episode);
             return;
         }
+        console.log('Playing audio from URL:', episode.audio.streamUrl);
         if (!isPlaying) {
             audioRef.current.play().catch(error => {
                 console.error('Error playing audio:', error);
@@ -75,8 +78,12 @@ const EpisodePlayer = ({ episode }) => {
     return (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <div className="flex items-start space-x-4">
-                <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-gray-400">MAM</span>
+                <div className="w-24 h-24 rounded-lg flex-shrink-0">
+                    <img
+                        src="/images/mam-logo.png"
+                        alt="MAM"
+                        className="w-full h-full object-cover rounded-lg"
+                    />
                 </div>
 
                 <div className="flex-grow">
