@@ -22,7 +22,7 @@ const App = () => {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">MAM Streaming</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Mad About Music</h1>
             {!isAuthenticated ? (
               <button
                 onClick={handleLogin}
